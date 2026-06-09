@@ -1,0 +1,107 @@
+// schema.prisma
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql" // Ou "mysql", "sqlite", etc.
+}
+
+model Cinema {
+  id       Int      @id @default(autoincrement())
+  nome     String
+  endereco String
+
+  salas    Sala[]
+  filmes   Filme[]
+  sessoes  Sessao[]
+}
+
+model Sala {
+  id         Int      @id @default(autoincrement())
+  numero     Int
+  capacidade Int
+  poltronas  Json     // Armazena a matriz bidimensional (ex: de ocupação ou mapa)
+
+  cinemaId   Int
+  cinema     Cinema   @relation(fields: [cinemaId], references: [id])
+  
+  sessoes    Sessao[]
+}
+
+enum GeneroFilme {
+  ACAO
+  COMEDIA
+  DRAMA
+  TERROR
+  FICCAO
+  DOCUMENTARIO
+}
+
+model Filme {
+  id                 Int         @id @default(autoincrement())
+  titulo             String
+  sinopse            String
+  classificacao      String
+  duracao            Int         // Alterado para Int (salvar em minutos, ex: 120 para 2h)
+  elenco             String
+  genero             GeneroFilme
+  dataInicioExibicao DateTime
+  dataFinalExibicao  DateTime
+
+  cinemaId           Int
+  cinema             Cinema      @relation(fields: [cinemaId], references: [id])
+  
+  sessoes            Sessao[]
+}
+
+model Sessao {
+  id              Int        @id @default(autoincrement())
+  horarioExibicao DateTime
+
+  cinemaId        Int
+  cinema          Cinema     @relation(fields: [cinemaId], references: [id])
+  
+  salaId          Int
+  sala            Sala       @relation(fields: [salaId], references: [id])
+  
+  filmeId         Int
+  filme           Filme      @relation(fields: [filmeId], references: [id])
+
+  ingressos       Ingresso[]
+}
+
+model Ingresso {
+  id           Int      @id @default(autoincrement())
+  valorInteira Float
+  valorMeia    Float
+
+  sessaoId     Int
+  sessao       Sessao   @relation(fields: [sessaoId], references: [id])
+
+  pedidoId     Int?     
+  pedido       Pedido?  @relation(fields: [pedidoId], references: [id])
+}
+
+model Pedido {
+  id         Int           @id @default(autoincrement())
+  qtInteira  Int
+  qtMeia     Int
+  valorTotal Float
+
+  ingressos  Ingresso[]
+  lanches    LancheCombo[]
+}
+
+model LancheCombo {
+  id            Int      @id @default(autoincrement())
+  nome          String
+  descricao     String
+  valorUnitario Float
+  qtUnidade     Int
+  subtotal      Float
+
+  pedidoId      Int
+  pedido        Pedido   @relation(fields: [pedidoId], references: [id])
+}
